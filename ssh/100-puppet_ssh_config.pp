@@ -1,3 +1,4 @@
+#Configure SSH client to use the school key and disable password authentication
 
 file_line { 'Turn off passwd auth':
   ensure => present,
