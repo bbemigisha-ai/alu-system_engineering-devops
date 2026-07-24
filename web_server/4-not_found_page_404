@@ -1,38 +1,25 @@
 #!/usr/bin/env bash
-# Configure Nginx custom 404 page
+# Customizing a 404-error_page
 
-sudo apt-get -y update
-sudo apt-get -y install nginx
+# Updating Packages before performing installations
+sudo apt-get update
+sudo apt-get install -y nginx
 
-mkdir -p /var/www/html
+# Creating an index.html page
+echo "Holberton School" | sudo tee /var/www/html/index.html
 
-cat > /etc/nginx/sites-available/default << 'EOF'
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+# Performing a "moved permanently redirection" (301)
+new_string="server_name _;\n\trewrite ^\/redirect_me https:\/\/github.com\/dzuokumor permanent;"
+sudo sed -i "s/server_name _;/$new_string/" /etc/nginx/sites-enabled/default
 
-    root /var/www/html;
-    index index.html index.htm index.nginx-debian.html;
+# Creating a 404 Custom error page
+echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html
+new_string="listen 80 default_server;\n\terror_page 404 \/404.html;\n\tlocation = \/404.html {\n\t\troot \/var\/www\/html;\n\t\tinternal;\n\t}"
 
-    server_name _;
+sudo sed -i "s/listen 80 default_server;/$new_string/" /etc/nginx/sites-enabled/default
 
-    location / {
-        try_files $uri $uri/ =404;
-    }
+# Testing configurations for syntax errors
+sudo nginx -t
 
-    location /redirect_me {
-        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-    }
-
-    error_page 404 /404.html;
-
-    location = /404.html {
-        internal;
-    }
-}
-EOF
-
-echo "Ceci n'est pas une page" > /var/www/html/404.html
-
-nginx -t
-systemctl restart nginx
+# restart nginx after implementing changes
+sudo service nginx restart
